@@ -43,6 +43,8 @@ export function Header() {
                 alt="Logo" 
                 className="h-8 w-8 rounded-full object-cover"
               />
+                            <span className="text-2xl font-bold tracking-tight">ORCA Explorer</span>
+
             </Link>
 
             <nav className="hidden md:flex items-center gap-1">
