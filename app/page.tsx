@@ -1,39 +1,70 @@
+"use client"
+
 import { SearchBar } from "@/components/search-bar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Activity, Users, TrendingUp, Zap } from "lucide-react"
-
-const stats = [
-  {
-    title: "Active Agents",
-    value: "847",
-    change: "+12.5%",
-    icon: Users,
-    trend: "up",
-  },
-  {
-    title: "Total Transactions",
-    value: "15,234",
-    change: "+8.2%",
-    icon: Activity,
-    trend: "up",
-  },
-  {
-    title: "ALGO Volume",
-    value: "2.4M",
-    change: "+15.3%",
-    icon: TrendingUp,
-    trend: "up",
-  },
-  {
-    title: "Avg Response Time",
-    value: "1.2s",
-    change: "-5.1%",
-    icon: Zap,
-    trend: "down",
-  },
-]
+import { useNetwork } from "@/contexts/network-context"
+import { useEffect, useState } from "react"
 
 export default function DashboardPage() {
+  const { network } = useNetwork()
+  const [agentsCount, setAgentsCount] = useState(0)
+  const [transactionsCount, setTransactionsCount] = useState(0)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [agentsRes, transactionsRes] = await Promise.all([
+          fetch(`/api/agents?network=${network}`),
+          fetch(`/api/transactions?network=${network}`)
+        ])
+        
+        const agents = await agentsRes.json()
+        const transactions = await transactionsRes.json()
+        
+        setAgentsCount(agents.length || 0)
+        setTransactionsCount(transactions.length || 0)
+      } catch (error) {
+        console.error('Failed to fetch data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [network])
+
+  const stats = [
+    {
+      title: "Active Agents",
+      value: loading ? "..." : agentsCount.toString(),
+      change: "+12.5%",
+      icon: Users,
+      trend: "up",
+    },
+    {
+      title: "Total Transactions",
+      value: loading ? "..." : transactionsCount.toString(),
+      change: "+8.2%",
+      icon: Activity,
+      trend: "up",
+    },
+    {
+      title: "ALGO Volume",
+      value: "2.4M",
+      change: "+15.3%",
+      icon: TrendingUp,
+      trend: "up",
+    },
+    {
+      title: "Avg Response Time",
+      value: "1.2s",
+      change: "-5.1%",
+      icon: Zap,
+      trend: "down",
+    },
+  ]
   return (
     <main className="min-h-screen">
       <SearchBar />

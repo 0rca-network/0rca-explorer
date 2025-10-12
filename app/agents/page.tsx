@@ -6,109 +6,51 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { LayoutGrid, List } from "lucide-react"
 import Link from "next/link"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
+import { useNetwork } from "@/contexts/network-context"
 
-const allAgents = [
-  {
-    id: "1",
-    name: "Price Oracle Agent",
-    author: "ORCA Team",
-    description: "Fetches and updates real-time price data from multiple DEXs on Algorand",
-    status: "active",
-    dateDeployed: "Dec 15, 2024",
-    assetId: "1001234567",
-  },
-  {
-    id: "2",
-    name: "Liquidity Monitor",
-    author: "DeFi Labs",
-    description: "Monitors liquidity pools and triggers alerts for significant changes",
-    status: "active",
-    dateDeployed: "Dec 14, 2024",
-    assetId: "1001234568",
-  },
-  {
-    id: "3",
-    name: "Automated Swap Agent",
-    author: "Trading Bot Inc",
-    description: "Executes automated token swaps based on predefined strategies",
-    status: "active",
-    dateDeployed: "Dec 13, 2024",
-    assetId: "1001234569",
-  },
-  {
-    id: "4",
-    name: "Analytics Reporter",
-    author: "Data Insights",
-    description: "Generates comprehensive analytics reports for on-chain activities",
-    status: "idle",
-    dateDeployed: "Dec 12, 2024",
-    assetId: "1001234570",
-  },
-  {
-    id: "5",
-    name: "NFT Tracker",
-    author: "NFT Studio",
-    description: "Tracks NFT minting, transfers, and marketplace activities",
-    status: "active",
-    dateDeployed: "Dec 11, 2024",
-    assetId: "1001234571",
-  },
-  {
-    id: "6",
-    name: "Governance Agent",
-    author: "DAO Tools",
-    description: "Automates governance voting and proposal submissions",
-    status: "idle",
-    dateDeployed: "Dec 10, 2024",
-    assetId: "1001234572",
-  },
-  {
-    id: "7",
-    name: "Yield Optimizer",
-    author: "DeFi Labs",
-    description: "Automatically optimizes yield farming strategies across protocols",
-    status: "active",
-    dateDeployed: "Dec 9, 2024",
-    assetId: "1001234573",
-  },
-  {
-    id: "8",
-    name: "Security Monitor",
-    author: "Security Inc",
-    description: "Monitors smart contracts for security vulnerabilities and anomalies",
-    status: "active",
-    dateDeployed: "Dec 8, 2024",
-    assetId: "1001234574",
-  },
-  {
-    id: "9",
-    name: "Market Maker Bot",
-    author: "Trading Bot Inc",
-    description: "Provides liquidity and maintains market efficiency",
-    status: "active",
-    dateDeployed: "Dec 7, 2024",
-    assetId: "1001234575",
-  },
-  {
-    id: "10",
-    name: "Arbitrage Scanner",
-    author: "Trading Bot Inc",
-    description: "Scans for arbitrage opportunities across DEXs",
-    status: "active",
-    dateDeployed: "Dec 6, 2024",
-    assetId: "1001234576",
-  },
-]
+
 
 const ITEMS_PER_PAGE = 6
 
 export default function AgentsPage() {
   const [view, setView] = useState<"list" | "tiles">("list")
+  const [allAgents, setAllAgents] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const { network } = useNetwork()
   const searchParams = useSearchParams()
   const currentPage = Number.parseInt(searchParams.get("page") || "1")
   const searchQuery = searchParams.get("search") || ""
+
+  useEffect(() => {
+    const fetchAgents = async () => {
+      try {
+        const response = await fetch(`/api/agents?network=${network}`)
+        const agents = await response.json()
+        const formattedAgents = agents.map((agent: any) => ({
+          id: agent.id.toString(),
+          name: agent.name,
+          author: agent.creatorName,
+          description: agent.description,
+          status: "active",
+          dateDeployed: new Date(agent.createdAt).toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+          }),
+          assetId: `100${agent.id.toString().padStart(7, '0')}`
+        }))
+        setAllAgents(formattedAgents)
+      } catch (error) {
+        console.error('Failed to fetch agents:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchAgents()
+  }, [network])
 
   const filteredAgents = useMemo(() => {
     if (!searchQuery) return allAgents
@@ -171,7 +113,11 @@ export default function AgentsPage() {
           </div>
         </div>
 
-        {paginatedAgents.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-16">
+            <p className="text-zinc-500 text-lg">Loading agents...</p>
+          </div>
+        ) : paginatedAgents.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-zinc-500 text-lg">No agents found matching your search.</p>
           </div>
