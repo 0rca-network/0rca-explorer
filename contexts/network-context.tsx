@@ -7,6 +7,8 @@ type Network = "testnet" | "mainnet"
 interface NetworkContextType {
   network: Network
   setNetwork: (network: Network) => void
+  appId: number
+  loggingAppId: number
 }
 
 const NetworkContext = createContext<NetworkContextType | undefined>(undefined)
@@ -14,8 +16,12 @@ const NetworkContext = createContext<NetworkContextType | undefined>(undefined)
 export function NetworkProvider({ children }: { children: ReactNode }) {
   const [network, setNetwork] = useState<Network>("testnet")
 
+  // Hardcoded for now as per user request for Testnet
+  const appId = 749655317
+  const loggingAppId = 749653154
+
   return (
-    <NetworkContext.Provider value={{ network, setNetwork }}>
+    <NetworkContext.Provider value={{ network, setNetwork, appId, loggingAppId }}>
       {children}
     </NetworkContext.Provider>
   )

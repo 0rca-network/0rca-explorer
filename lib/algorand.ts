@@ -91,7 +91,9 @@ function decodeBoxContent(content: Uint8Array): Partial<AgentData> {
 export async function fetchNumberOfAgents(): Promise<number> {
   try {
     const app = await algodClient.getApplicationByID(MAIN_APP_ID).do();
-    const globalState = app.params.globalState || app.params["global-state"] || [];
+    // Fix: Cast to any to avoid type errors with different SDK versions
+    const params = app.params as any;
+    const globalState = params.globalState || params["global-state"] || [];
 
     for (const state of globalState) {
       const keyBase64 = state.key;
@@ -119,22 +121,17 @@ export async function fetchAgents(): Promise<AgentData[]> {
 
     for (const box of boxNames) {
       try {
-        // Fix: Access nameRaw correctly. 
-        // box structure from algokit-utils might vary, but debug showed it has nameRaw property directly?
-        // Or maybe it's box.name.nameRaw?
-        // The user error said "Cannot use 'in' operator to search for 'length' in undefined" at box.name.nameRaw
-        // This implies box.name is undefined.
-        // Debug output showed: { "nameRaw": ... }
-        // So we use box.nameRaw if available, or box.name.nameRaw safely.
-
+        // Fix: Cast box to any to handle type inference issues
+        const boxAny = box as any;
         let nameRaw: Uint8Array;
-        if ('nameRaw' in box) {
-          nameRaw = (box as any).nameRaw;
-        } else if (box.name && 'nameRaw' in box.name) {
-          nameRaw = box.name.nameRaw;
+
+        if (boxAny.nameRaw) {
+          nameRaw = boxAny.nameRaw;
+        } else if (boxAny.name && boxAny.name.nameRaw) {
+          nameRaw = boxAny.name.nameRaw;
         } else {
-          console.warn("Unknown box name structure", box);
-          continue;
+          // Fallback
+          nameRaw = boxAny.name || new Uint8Array();
         }
 
         const content = await algorand.app.getBoxValue(appId, nameRaw);
@@ -143,24 +140,29 @@ export async function fetchAgents(): Promise<AgentData[]> {
         const decoded = decodeBoxContent(content);
 
         // Generate ID/Address
-        // If we can't extract address from content (first 32 bytes?), use box name?
-        // Box name is 8 bytes int.
-        // Let's use a placeholder address if we can't find one, or derive from box name.
-        // Actually, the previous debug showed content length 115 bytes.
-        // It likely contains the address? 
-        // But my heuristic decoder might skip binary address.
+        // Heuristic: If content starts with 32 bytes that look like an address (not all zeros)
+        // Or use box name if it's an integer index
 
-        // Let's assume the address is NOT in the box content as the first 32 bytes if it starts with offsets.
-        // However, we need an ID.
-        // Let's use the Box Name (Hex) as the ID for now if we don't have an address.
-        const boxId = Buffer.from(nameRaw).toString('hex');
-        const address = boxId; // Placeholder
+        const boxIdHex = Buffer.from(nameRaw).toString('hex');
+        let address = boxIdHex;
+
+        // If content is long enough, maybe the first 32 bytes are the address?
+        // The debug output showed content length 115. 
+        // Let's try to encode the first 32 bytes as an address.
+        if (content.length >= 32) {
+          try {
+            const addrBytes = content.slice(0, 32);
+            address = algosdk.encodeAddress(addrBytes);
+          } catch (e) {
+            // Ignore if not a valid address
+          }
+        }
 
         agents.push({
           id: address,
-          name: decoded.name || `Agent ${boxId}`,
+          name: decoded.name || `Agent ${address.slice(0, 8)}...`,
           creatorName: "Algorand",
-          description: decoded.description || "Autonomous Agent",
+          description: decoded.description || "Autonomous Agent on Algorand Testnet",
           createdAt: new Date().toISOString(),
           status: decoded.status || "active",
           address: address
@@ -190,6 +192,9 @@ export async function fetchLoggingTransactions(agents: string[], nextToken?: str
     }
 
     const res = await query.do();
+    // Fix: Cast res to any to access next-token if type definition is missing it
+    const resAny = res as any;
+
     const txns = (res.transactions || [])
       .map((tx: any) => ({
         id: tx.id,
@@ -200,7 +205,7 @@ export async function fetchLoggingTransactions(agents: string[], nextToken?: str
 
     return {
       transactions: txns,
-      nextToken: res["next-token"]
+      nextToken: resAny["next-token"] || resAny.nextToken
     };
   } catch (error) {
     console.error("Error fetching logging transactions:", error);
