@@ -189,31 +189,41 @@ export async function fetchAgentTasks(appId: number): Promise<TaskData[]> {
 }
 
 // 5️⃣ Fetch logging contract transactions
+// 5️⃣ Fetch logging contract transactions
 export async function fetchLoggingTransactions(agents: string[], nextToken?: string) {
   try {
-    let query = indexerClient.searchForTransactions()
-      .applicationID(LOGGING_APP_ID)
-      .limit(PAGE_LIMIT);
+    let allTxns: any[] = [];
+    let currentToken = nextToken;
 
-    if (nextToken) {
-      query = query.nextToken(nextToken);
-    }
+    // Fetch all transactions to support client-side pagination
+    do {
+      let query = indexerClient.searchForTransactions()
+        .applicationID(LOGGING_APP_ID)
+        .limit(1000); // Maximize fetch size
 
-    const res = await query.do();
-    // Fix: Cast res to any to access next-token if type definition is missing it
-    const resAny = res as any;
+      if (currentToken) {
+        query = query.nextToken(currentToken);
+      }
 
-    const txns = (res.transactions || [])
-      .map((tx: any) => ({
-        id: tx.id,
-        sender: tx.sender,
-        round: Number(tx["confirmed-round"]),
-        timestamp: Number(tx["round-time"])
-      }));
+      const res = await query.do();
+      const resAny = res as any;
+
+      const txns = (res.transactions || [])
+        .map((tx: any) => ({
+          id: tx.id,
+          sender: tx.sender,
+          round: Number(tx.confirmedRound),
+          timestamp: Number(tx.roundTime)
+        }));
+
+      allTxns = [...allTxns, ...txns];
+      currentToken = resAny["next-token"];
+
+    } while (currentToken);
 
     return {
-      transactions: txns,
-      nextToken: resAny["next-token"] || resAny.nextToken
+      transactions: allTxns,
+      nextToken: null
     };
   } catch (error) {
     console.error("Error fetching logging transactions:", error);
