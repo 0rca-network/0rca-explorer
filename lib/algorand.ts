@@ -117,7 +117,78 @@ export async function fetchAgents(): Promise<AgentData[]> {
   }
 }
 
-// 3️⃣ Fetch logging contract transactions
+// 3️⃣ Fetch Agent Details (Global State)
+export async function fetchAgentDetails(appId: number) {
+  try {
+    const app = await algodClient.getApplicationByID(appId).do();
+    const params = app.params as any;
+    const globalState = params.globalState || params["global-state"] || [];
+
+    const details: Record<string, any> = {};
+    for (const state of globalState) {
+      const key = Buffer.from(state.key, "base64").toString();
+      const value = state.value.uint !== undefined ? Number(state.value.uint) : state.value.bytes;
+      details[key] = value;
+    }
+
+    return details;
+  } catch (error) {
+    console.error(`Error fetching agent details for ${appId}:`, error);
+    return {};
+  }
+}
+
+export interface TaskData {
+  id: string;
+  success: boolean;
+  timestamp: number;
+  details: string;
+  executor: string;
+}
+
+// 4️⃣ Fetch Agent Tasks (Boxes)
+export async function fetchAgentTasks(appId: number): Promise<TaskData[]> {
+  try {
+    const appIdBigInt = BigInt(appId);
+    const boxNames = await algorand.app.getBoxNames(appIdBigInt);
+    const tasks: TaskData[] = [];
+
+    // Task Struct: (uint64,bool,uint64,string,address)
+    const taskAbiType = algosdk.ABIType.from("(uint64,bool,uint64,string,address)");
+
+    for (const box of boxNames) {
+      try {
+        const boxAny = box as any;
+        let nameRaw: Uint8Array;
+        if (boxAny.nameRaw) nameRaw = boxAny.nameRaw;
+        else if (boxAny.name && boxAny.name.nameRaw) nameRaw = boxAny.name.nameRaw;
+        else nameRaw = boxAny.name || new Uint8Array();
+
+        const content = await algorand.app.getBoxValue(appIdBigInt, nameRaw);
+
+        // Decode as Task
+        const decoded = taskAbiType.decode(content) as any;
+
+        tasks.push({
+          id: decoded[0].toString(),
+          success: decoded[1],
+          timestamp: Number(decoded[2]),
+          details: decoded[3],
+          executor: decoded[4]
+        });
+      } catch (e) {
+        // Ignore boxes that don't match Task struct
+      }
+    }
+
+    return tasks.sort((a, b) => b.timestamp - a.timestamp);
+  } catch (error) {
+    console.error(`Error fetching tasks for ${appId}:`, error);
+    return [];
+  }
+}
+
+// 5️⃣ Fetch logging contract transactions
 export async function fetchLoggingTransactions(agents: string[], nextToken?: string) {
   try {
     let query = indexerClient.searchForTransactions()
