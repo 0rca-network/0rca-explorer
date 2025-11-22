@@ -55,7 +55,7 @@ export default function TransactionsPage() {
     if (!searchQuery) return allTransactions
     const query = searchQuery.toLowerCase()
     return allTransactions.filter((tx) => tx.id.toLowerCase().includes(query) || tx.agent.toLowerCase().includes(query))
-  }, [searchQuery])
+  }, [searchQuery, allTransactions])
 
   const totalPages = Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE)
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE

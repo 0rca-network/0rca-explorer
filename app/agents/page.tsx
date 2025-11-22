@@ -28,7 +28,9 @@ export default function AgentsPage() {
       try {
         const response = await fetch(`/api/agents?network=${network}`)
         const data = await response.json()
+
         const agentsList = data.agents || []
+
         const formattedAgents = agentsList.map((agent: any) => ({
           id: agent.id.toString(),
           name: agent.name,
@@ -62,7 +64,7 @@ export default function AgentsPage() {
         agent.description.toLowerCase().includes(query) ||
         agent.author.toLowerCase().includes(query),
     )
-  }, [searchQuery])
+  }, [searchQuery, allAgents])
 
   const totalPages = Math.ceil(filteredAgents.length / ITEMS_PER_PAGE)
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
@@ -137,8 +139,8 @@ export default function AgentsPage() {
                       <Badge
                         variant="outline"
                         className={`${agent.status === "active"
-                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                            : "bg-zinc-500/10 text-zinc-400 border-zinc-500/20"
+                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                          : "bg-zinc-500/10 text-zinc-400 border-zinc-500/20"
                           }`}
                       >
                         {agent.status}
@@ -173,8 +175,8 @@ export default function AgentsPage() {
                   <Badge
                     variant="outline"
                     className={`${agent.status === "active"
-                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                        : "bg-zinc-500/10 text-zinc-400 border-zinc-500/20"
+                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                      : "bg-zinc-500/10 text-zinc-400 border-zinc-500/20"
                       }`}
                   >
                     {agent.status}
