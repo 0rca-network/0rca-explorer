@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { Header } from "@/components/header"
 import { NetworkInfo } from "@/components/network-info"
+import { Footer } from "@/components/footer"
 import { NetworkProvider } from "@/contexts/network-context"
 import { Suspense } from "react"
 
@@ -13,6 +14,9 @@ export const metadata: Metadata = {
   title: "AI Agents Explorer",
   description: "Explore AI Agents on-chain",
   generator: "v0.app",
+  icons: {
+    icon: "/favicon.ico",
+  },
 }
 
 export default function RootLayout({
@@ -28,6 +32,7 @@ export default function RootLayout({
             <Header />
             <NetworkInfo />
             {children}
+            <Footer />
           </Suspense>
         </NetworkProvider>
         <Analytics />

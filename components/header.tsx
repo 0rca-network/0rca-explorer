@@ -2,29 +2,15 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Moon, Sun, ChevronDown } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useState, useEffect } from "react"
+
 import { useNetwork } from "@/contexts/network-context"
 
 export function Header() {
   const pathname = usePathname()
-  const [theme, setTheme] = useState<"light" | "dark">("dark")
   const { network, setNetwork } = useNetwork()
-
-  useEffect(() => {
-    // Apply theme to document root
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark")
-    } else {
-      document.documentElement.classList.remove("dark")
-    }
-  }, [theme])
-
-  const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark")
-  }
 
   const navItems = [
     { name: "Dashboard", href: "/" },
@@ -39,11 +25,11 @@ export function Header() {
           <div className="flex items-center gap-12">
             <Link href="/" className="flex items-center gap-3">
               <img 
-                src="/logo.png" 
+                src="/0rca_white.png" 
                 alt="Logo" 
-                className="h-8 w-8 rounded-full object-cover"
+                className="h-8 w-8"
               />
-                            <span className="text-2xl font-bold tracking-tight">ORCA Explorer</span>
+                            <span className="text-2xl font-bold tracking-tight">Explorer</span>
 
             </Link>
 
@@ -74,9 +60,7 @@ export function Header() {
                 <SelectItem value="mainnet">MainNet</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-10 w-10 rounded-lg hover:bg-white/10">
-              {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </Button>
+
           </div>
         </div>
       </div>
