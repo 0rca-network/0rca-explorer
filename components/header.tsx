@@ -29,7 +29,7 @@ export function Header() {
                 alt="Logo" 
                 className="h-8 w-8"
               />
-                            <span className="text-2xl font-bold tracking-tight">Explorer</span>
+                            <span className="text-2xl font-bold tracking-tight">Explorer Cronos</span>
 
             </Link>
 

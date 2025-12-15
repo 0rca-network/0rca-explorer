@@ -3,10 +3,10 @@ import { fetchAgentDetails, fetchAgentTasks } from '@/lib/algorand'
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const id = params.id
+        const { id } = await params
 
         // The ID passed here is the App ID (as per our previous change)
         const appId = Number(id);

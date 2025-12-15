@@ -7,12 +7,12 @@ export function NetworkInfo() {
 
   const networkConfig = {
     testnet: {
-      name: "Algorand TestNet",
+      name: "Cronos TestNet",
       appId: "749655317",
       assetId: "749653154"
     },
     mainnet: {
-      name: "Algorand MainNet",
+      name: "Cronos MainNet",
       appId: "0987654321",
       assetId: "1234567890"
     }

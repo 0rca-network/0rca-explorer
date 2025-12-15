@@ -83,7 +83,7 @@ export default function AgentsPage() {
                 AI Agents
               </h1>
               <p className="text-zinc-400 text-lg">
-                Explore autonomous agents operating on Algorand
+                Explore autonomous agents operating on Cronos
                 {searchQuery && (
                   <span className="ml-2 text-zinc-500">
                     ({filteredAgents.length} result{filteredAgents.length !== 1 ? "s" : ""})

@@ -74,7 +74,7 @@ export default function DashboardPage() {
           <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
             Dashboard
           </h1>
-          <p className="text-zinc-400 text-lg">Monitor your AI agents on Algorand blockchain</p>
+          <p className="text-zinc-400 text-lg">Monitor your AI agents on Cronos blockchain</p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-12">

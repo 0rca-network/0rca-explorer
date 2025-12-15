@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { fetchAgentAccounts, fetchLoggingTransactions } from '@/lib/algorand'
+import { fetchLoggingTransactions } from '@/lib/algorand'
 
 export async function GET(request: NextRequest) {
   try {

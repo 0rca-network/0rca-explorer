@@ -11,7 +11,7 @@ import { NetworkProvider } from "@/contexts/network-context"
 import { Suspense } from "react"
 
 export const metadata: Metadata = {
-  title: "AI Agents Explorer",
+  title: "0rca Explorer Cronos",
   description: "Explore AI Agents on-chain",
   generator: "v0.app",
   icons: {

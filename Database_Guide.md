@@ -127,8 +127,8 @@ Returns transactions from testnet database.
 ### GET /api/transactions?network=mainnet
 Returns transactions from mainnet database.
 
-## Algorand Transaction Types
-The system supports these Algorand transaction types:
+## Cronos Transaction Types
+The system supports these Cronos transaction types:
 - `appl` - Application call
 - `axfer` - Asset transfer
 - `acfg` - Asset configuration

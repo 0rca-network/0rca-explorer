@@ -80,7 +80,7 @@ export default function TransactionsPage() {
                 Transactions
               </h1>
               <p className="text-zinc-400 text-lg">
-                Track all agent transactions on Algorand blockchain
+                Track all agent transactions on Cronos blockchain
                 {searchQuery && (
                   <span className="ml-2 text-zinc-500">
                     ({filteredTransactions.length} result{filteredTransactions.length !== 1 ? "s" : ""})

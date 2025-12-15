@@ -1,7 +1,7 @@
-# ORCA AI Agents Explorer - Full Project Guide
+# ORCA AI Agents Explorer Cronos - Full Project Guide
 
 ## Project Overview
-A Next.js 15 application for exploring AI agents on the Algorand blockchain. Features a dark theme with network switching capabilities between TestNet and MainNet.
+A Next.js 15 application for exploring AI agents on the Cronos blockchain. Features a dark theme with network switching capabilities between TestNet and MainNet.
 
 ## Tech Stack
 - **Framework**: Next.js 15 with App Router
@@ -140,7 +140,7 @@ Complete set of 40+ components including:
 
 ## Network Integration
 
-### Algorand Integration
+### Cronos Integration
 - **TestNet**: Default network with test App/Asset IDs
 - **MainNet**: Production network configuration
 - **External Links**: AlgoExplorer integration for transaction viewing
@@ -156,4 +156,4 @@ Complete set of 40+ components including:
 - **Code Splitting**: Automatic with Next.js App Router
 - **Image Optimization**: Configured for deployment flexibility
 
-This project provides a solid foundation for a blockchain explorer with modern React patterns, comprehensive UI components, and extensible architecture for real Algorand integration.
+This project provides a solid foundation for a blockchain explorer with modern React patterns, comprehensive UI components, and extensible architecture for real Cronos integration.
