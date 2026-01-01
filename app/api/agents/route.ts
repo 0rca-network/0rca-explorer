@@ -12,11 +12,35 @@ export async function GET(request: NextRequest) {
       chainId = 1337;
     }
 
-    const agents = await fetchAgents(chainId);
+    let filteredAgents = await fetchAgents(chainId);
+
+    // Filter by Owner
+    const owner = searchParams.get('owner');
+    if (owner) {
+      filteredAgents = filteredAgents.filter(a => a.address.toLowerCase() === owner.toLowerCase());
+    }
+
+    // Filter by Reputation (Score)
+    const minReputation = searchParams.get('minReputation') || searchParams.get('reputation');
+    if (minReputation) {
+      filteredAgents = filteredAgents.filter(a => a.reputation.score >= parseInt(minReputation));
+    }
+
+    // Filter by Feedback (Count)
+    const minFeedback = searchParams.get('minFeedback') || searchParams.get('feedback');
+    if (minFeedback) {
+      filteredAgents = filteredAgents.filter(a => a.reputation.count >= parseInt(minFeedback));
+    }
+
+    // Filter by Verified (Validation Count > 0)
+    const verified = searchParams.get('verified');
+    if (verified === 'true') {
+      filteredAgents = filteredAgents.filter(a => a.validation.count > 0);
+    }
 
     return NextResponse.json({
-      count: agents.length,
-      agents: agents
+      count: filteredAgents.length,
+      agents: filteredAgents
     })
   } catch (error) {
     console.error('Cronos fetch error:', error)
