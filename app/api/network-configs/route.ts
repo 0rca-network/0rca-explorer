@@ -3,11 +3,10 @@ import { NextResponse } from 'next/server'
 export async function GET() {
   return NextResponse.json([
     {
-      id: 'testnet',
-      name: 'Testnet',
-      algodUrl: 'https://testnet-api.algonode.cloud',
-      indexerUrl: 'https://testnet-idx.algonode.cloud',
-      explorerUrl: 'https://lora.algokit.io'
+      id: 'cronos-testnet',
+      name: 'Cronos Testnet',
+      rpcUrl: 'https://evm-t3.cronos.org',
+      explorerUrl: 'https://explorer.cronos.org/testnet'
     }
   ])
 }

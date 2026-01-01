@@ -1,27 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { fetchLoggingTransactions } from '@/lib/algorand'
+import { fetchTransactions } from '@/lib/cronos'
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const network = searchParams.get('network')
-    const nextToken = searchParams.get('nextToken') || undefined
-
-    if (network === 'mainnet') {
-      return NextResponse.json({ transactions: [], nextToken: null })
-    }
-
-    // We don't strictly need to fetch agents to get transactions, 
-    // but we might want to pass them if we were filtering.
-    // For now, just fetch transactions directly.
-    const { transactions, nextToken: newNextToken } = await fetchLoggingTransactions([], nextToken);
+    const transactions = await fetchTransactions();
 
     return NextResponse.json({
       transactions,
-      nextToken: newNextToken
+      nextToken: null
     })
   } catch (error) {
-    console.error('Algorand fetch error:', error)
+    console.error('Cronos fetch error:', error)
     return NextResponse.json(
       { error: 'Failed to fetch transactions' },
       { status: 500 }

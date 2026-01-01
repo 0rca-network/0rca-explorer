@@ -1,151 +1,75 @@
-import hre from "hardhat";
-import { getCreate2Address, keccak256, encodeAbiParameters } from "viem";
+import { ethers } from "ethers";
+import * as hre from "hardhat";
 
-/**
- * Deploy script for ERC-8004 upgradeable contracts using UUPS proxy pattern
- *
- * This script:
- * 1. Deploys implementation contracts for all three registries
- * 2. Deploys ERC1967Proxy for each implementation
- * 3. Initializes each proxy with appropriate parameters
- * 4. Returns proxy addresses for interaction
- */
 async function main() {
-  const { viem } = await hre.network.connect();
-  const publicClient = await viem.getPublicClient();
-  const [deployer] = await viem.getWalletClients();
+  console.log("Deploying ERC-8004 Upgradeable Contracts (Standalone Ethers ESM)");
+  console.log("==============================================================");
 
-  console.log("Deploying ERC-8004 Upgradeable Contracts");
-  console.log("========================================");
-  console.log("Deployer address:", deployer.account.address);
+  // console.log("HRE Keys:", Object.keys(hre));
+  // Check if hre has network or if it is on default
+  const hh = (hre as any).default || hre;
+
+  const url = (hh.network && hh.network.config && hh.network.config.url) || "https://evm-t3.cronos.org";
+  // Fallback mnemonic
+  const mnemonic = "dish public milk ramp capable venue poverty grain useless december hedgehog shuffle";
+
+  const provider = new ethers.JsonRpcProvider(url);
+  const wallet = ethers.Wallet.fromPhrase(mnemonic).connect(provider);
+
+  console.log("Deployer address:", wallet.address);
+
+  async function deploy(name: string, args: any[] = []) {
+    console.log(`Deploying ${name}...`);
+    const artifact = await hre.artifacts.readArtifact(name);
+    const factory = new ethers.ContractFactory(artifact.abi, artifact.bytecode, wallet);
+    const contract = await factory.deploy(...args);
+    await contract.waitForDeployment();
+    console.log(`   ${name} deployed at:`, contract.target);
+    return contract;
+  }
+
+  // 1. IdentityRegistry
+  console.log("1. Setup IdentityRegistry");
+  const identityImpl = await deploy("IdentityRegistryUpgradeable");
+
+  console.log("   Deploying Proxy...");
+  const IdentityArtifact = await hre.artifacts.readArtifact("IdentityRegistryUpgradeable");
+  const IdentityInterface = new ethers.Interface(IdentityArtifact.abi);
+  const identityInitData = IdentityInterface.encodeFunctionData("initialize", []);
+
+  const identityProxy = await deploy("ERC1967Proxy", [identityImpl.target, identityInitData]);
+
+  // 2. ReputationRegistry
+  console.log("2. Setup ReputationRegistry");
+  const reputationImpl = await deploy("ReputationRegistryUpgradeable");
+
+  console.log("   Deploying Proxy...");
+  const ReputationArtifact = await hre.artifacts.readArtifact("ReputationRegistryUpgradeable");
+  const ReputationInterface = new ethers.Interface(ReputationArtifact.abi);
+  const reputationInitData = ReputationInterface.encodeFunctionData("initialize", [identityProxy.target]);
+
+  const reputationProxy = await deploy("ERC1967Proxy", [reputationImpl.target, reputationInitData]);
+
+  // 3. ValidationRegistry
+  console.log("3. Setup ValidationRegistry");
+  const validationImpl = await deploy("ValidationRegistryUpgradeable");
+
+  console.log("   Deploying Proxy...");
+  const ValidationArtifact = await hre.artifacts.readArtifact("ValidationRegistryUpgradeable");
+  const ValidationInterface = new ethers.Interface(ValidationArtifact.abi);
+  const validationInitData = ValidationInterface.encodeFunctionData("initialize", [identityProxy.target]);
+
+  const validationProxy = await deploy("ERC1967Proxy", [validationImpl.target, validationInitData]);
+
   console.log("");
-
-  // Step 1: Deploy IdentityRegistry Implementation
-  console.log("1. Deploying IdentityRegistry implementation...");
-  const identityRegistryImpl = await viem.deployContract("IdentityRegistryUpgradeable");
-  console.log("   Implementation deployed at:", identityRegistryImpl.address);
-
-  // Step 2: Deploy IdentityRegistry Proxy
-  console.log("2. Deploying IdentityRegistry proxy...");
-  // initialize() function selector with no parameters
-  const identityInitCalldata = "0x8129fc1c" as `0x${string}`;
-
-  const identityProxy = await viem.deployContract("ERC1967Proxy", [
-    identityRegistryImpl.address,
-    identityInitCalldata
-  ]);
-  console.log("   Proxy deployed at:", identityProxy.address);
-  console.log("");
-
-  // Get IdentityRegistry instance through proxy
-  const identityRegistry = await viem.getContractAt(
-    "IdentityRegistryUpgradeable",
-    identityProxy.address
-  );
-
-  // Step 3: Deploy ReputationRegistry Implementation
-  console.log("3. Deploying ReputationRegistry implementation...");
-  const reputationRegistryImpl = await viem.deployContract("ReputationRegistryUpgradeable");
-  console.log("   Implementation deployed at:", reputationRegistryImpl.address);
-
-  // Step 4: Deploy ReputationRegistry Proxy
-  console.log("4. Deploying ReputationRegistry proxy...");
-  // Encode the initialize(address) call
-  const reputationInitCalldata = encodeAbiParameters(
-    [{ name: "identityRegistry", type: "address" }],
-    [identityProxy.address]
-  );
-  // Prepend function selector for initialize(address): 0xc4d66de8
-  const reputationInitData = ("0xc4d66de8" + reputationInitCalldata.slice(2)) as `0x${string}`;
-
-  const reputationProxy = await viem.deployContract("ERC1967Proxy", [
-    reputationRegistryImpl.address,
-    reputationInitData
-  ]);
-  console.log("   Proxy deployed at:", reputationProxy.address);
-  console.log("");
-
-  // Get ReputationRegistry instance through proxy
-  const reputationRegistry = await viem.getContractAt(
-    "ReputationRegistryUpgradeable",
-    reputationProxy.address
-  );
-
-  // Step 5: Deploy ValidationRegistry Implementation
-  console.log("5. Deploying ValidationRegistry implementation...");
-  const validationRegistryImpl = await viem.deployContract("ValidationRegistryUpgradeable");
-  console.log("   Implementation deployed at:", validationRegistryImpl.address);
-
-  // Step 6: Deploy ValidationRegistry Proxy
-  console.log("6. Deploying ValidationRegistry proxy...");
-  // Encode the initialize(address) call
-  const validationInitCalldata = encodeAbiParameters(
-    [{ name: "identityRegistry", type: "address" }],
-    [identityProxy.address]
-  );
-  // Prepend function selector for initialize(address): 0xc4d66de8
-  const validationInitData = ("0xc4d66de8" + validationInitCalldata.slice(2)) as `0x${string}`;
-
-  const validationProxy = await viem.deployContract("ERC1967Proxy", [
-    validationRegistryImpl.address,
-    validationInitData
-  ]);
-  console.log("   Proxy deployed at:", validationProxy.address);
-  console.log("");
-
-  // Get ValidationRegistry instance through proxy
-  const validationRegistry = await viem.getContractAt(
-    "ValidationRegistryUpgradeable",
-    validationProxy.address
-  );
-
-  // Verify deployments
-  console.log("Verifying deployments...");
-  console.log("=========================");
-
-  const identityVersion = await identityRegistry.read.getVersion();
-  console.log("IdentityRegistry version:", identityVersion);
-
-  const reputationVersion = await reputationRegistry.read.getVersion();
-  const reputationIdentityRegistry = await reputationRegistry.read.getIdentityRegistry();
-  console.log("ReputationRegistry version:", reputationVersion);
-  console.log("ReputationRegistry identityRegistry:", reputationIdentityRegistry);
-
-  const validationVersion = await validationRegistry.read.getVersion();
-  const validationIdentityRegistry = await validationRegistry.read.getIdentityRegistry();
-  console.log("ValidationRegistry version:", validationVersion);
-  console.log("ValidationRegistry identityRegistry:", validationIdentityRegistry);
-  console.log("");
-
-  // Summary
   console.log("Deployment Summary");
   console.log("==================");
-  console.log("IdentityRegistry Proxy:", identityProxy.address);
-  console.log("ReputationRegistry Proxy:", reputationProxy.address);
-  console.log("ValidationRegistry Proxy:", validationProxy.address);
-  console.log("");
-  console.log("Implementation Addresses:");
-  console.log("IdentityRegistry Implementation:", identityRegistryImpl.address);
-  console.log("ReputationRegistry Implementation:", reputationRegistryImpl.address);
-  console.log("ValidationRegistry Implementation:", validationRegistryImpl.address);
-  console.log("");
-  console.log("✅ All contracts deployed successfully!");
-
-  return {
-    proxies: {
-      identityRegistry: identityProxy.address,
-      reputationRegistry: reputationProxy.address,
-      validationRegistry: validationProxy.address
-    },
-    implementations: {
-      identityRegistry: identityRegistryImpl.address,
-      reputationRegistry: reputationRegistryImpl.address,
-      validationRegistry: validationRegistryImpl.address
-    }
-  };
+  console.log("IdentityRegistry Proxy:", identityProxy.target);
+  console.log("ReputationRegistry Proxy:", reputationProxy.target);
+  console.log("ValidationRegistry Proxy:", validationProxy.target);
 }
 
 main().catch((error) => {
   console.error(error);
-  process.exit(1);
+  process.exitCode = 1;
 });

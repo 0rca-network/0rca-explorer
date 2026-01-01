@@ -51,7 +51,7 @@ export default function DashboardPage() {
       trend: "up",
     },
     {
-      title: "ALGO Volume",
+      title: "TCRO Volume",
       value: "2.4M",
       change: "+15.3%",
       icon: TrendingUp,

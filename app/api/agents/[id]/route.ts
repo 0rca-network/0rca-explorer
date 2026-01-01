@@ -1,31 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { fetchAgentDetails, fetchAgentTasks } from '@/lib/algorand'
+import { fetchAgentDetails } from '@/lib/cronos'
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    context: { params: Promise<{ id: string }> } // Correct type for Next.js 15
 ) {
     try {
-        const { id } = await params
+        const params = await context.params
+        const { id } = params // Use string ID directly
 
-        // The ID passed here is the App ID (as per our previous change)
-        const appId = Number(id);
+        const details = await fetchAgentDetails(id)
 
-        if (isNaN(appId)) {
-            return NextResponse.json({ error: 'Invalid App ID' }, { status: 400 })
+        if (!details) {
+            return NextResponse.json({ error: 'Agent not found' }, { status: 404 })
         }
 
-        const [details, tasks] = await Promise.all([
-            fetchAgentDetails(appId),
-            fetchAgentTasks(appId)
-        ])
-
         return NextResponse.json({
-            details,
-            tasks
+            details
         })
     } catch (error) {
-        console.error('Agent details fetch error:', error)
+        console.error('Cronos fetch error:', error)
         return NextResponse.json(
             { error: 'Failed to fetch agent details' },
             { status: 500 }
