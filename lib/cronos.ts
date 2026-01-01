@@ -1,15 +1,12 @@
 import { createPublicClient, http, defineChain, parseAbiItem } from 'viem';
+import contracts from './contracts.json';
 
-// Cronos Testnet Definition
-const cronosTestnet = defineChain({
+// Chain Definitions
+const cronosTestnetChain = defineChain({
     id: 338,
     name: 'Cronos Testnet',
     network: 'cronos-testnet',
-    nativeCurrency: {
-        decimals: 18,
-        name: 'TCRO',
-        symbol: 'TCRO',
-    },
+    nativeCurrency: { decimals: 18, name: 'TCRO', symbol: 'TCRO' },
     rpcUrls: {
         default: { http: ['https://evm-t3.cronos.org'] },
         public: { http: ['https://evm-t3.cronos.org'] },
@@ -20,15 +17,50 @@ const cronosTestnet = defineChain({
     testnet: true,
 });
 
-export const publicClient = createPublicClient({
-    chain: cronosTestnet,
-    transport: http(),
+const ganacheChain = defineChain({
+    id: 1337,
+    name: 'Localnet',
+    network: 'ganache',
+    nativeCurrency: { decimals: 18, name: 'ETH', symbol: 'ETH' },
+    rpcUrls: {
+        default: { http: ['http://127.0.0.1:7545'] },
+        public: { http: ['http://127.0.0.1:7545'] },
+    },
+    blockExplorers: {
+        default: { name: 'Local Explorer', url: 'http://127.0.0.1:7545' },
+    },
+    testnet: true,
 });
 
-// Contract Addresses
-export const IDENTITY_REGISTRY_ADDRESS = '0xB159E0c8093081712c92e274DbFEa5A97A80cA30';
-export const REPUTATION_REGISTRY_ADDRESS = '0x38E9cDB0eBc128bEA55c36C03D5532697669132d';
-export const VALIDATION_REGISTRY_ADDRESS = '0x386fd4Fa2F27E528CF2D11C6d4b0A4dceD283E0E';
+// Client Cache
+const clients: Record<number, any> = {};
+
+export function getPublicClient(chainId: number = 338) {
+    if (clients[chainId]) return clients[chainId];
+
+    let chain = cronosTestnetChain;
+    if (chainId === 1337 || chainId === 5777) chain = ganacheChain;
+
+    const client = createPublicClient({
+        chain,
+        transport: http(),
+    });
+    clients[chainId] = client;
+    return client;
+}
+
+export function getContractAddresses(chainId: number = 338) {
+    if (chainId === 1337 || chainId === 5777) {
+        return contracts.ganache;
+    }
+    return contracts.cronosTestnet;
+}
+
+// Default export for backward compatibility if needed, but prefer specific calls
+export const publicClient = getPublicClient();
+export const IDENTITY_REGISTRY_ADDRESS = contracts.cronosTestnet.identityRegistry;
+export const REPUTATION_REGISTRY_ADDRESS = contracts.cronosTestnet.reputationRegistry;
+export const VALIDATION_REGISTRY_ADDRESS = contracts.cronosTestnet.validationRegistry;
 
 // ABIs
 const IDENTITY_ABI = [
@@ -66,11 +98,14 @@ export interface AgentData {
     };
 }
 
-export async function fetchAgents(): Promise<AgentData[]> {
+export async function fetchAgents(chainId: number = 338): Promise<AgentData[]> {
     try {
+        const client = getPublicClient(chainId);
+        const addresses = getContractAddresses(chainId);
+
         // 1. Get all Registered events
-        const logs = await publicClient.getLogs({
-            address: IDENTITY_REGISTRY_ADDRESS,
+        const logs = await client.getLogs({
+            address: addresses.identityRegistry as `0x${string}`,
             event: parseAbiItem('event Registered(uint256 indexed agentId, string tokenURI, address indexed owner)'),
             fromBlock: 'earliest'
         });
@@ -84,8 +119,6 @@ export async function fetchAgents(): Promise<AgentData[]> {
             const owner = log.args.owner || '0x0000000000000000000000000000000000000000';
             const tokenUri = log.args.tokenURI || '';
 
-            // Fetch metadata from URI (mocking for simplicity if URI is just a string, else fetch)
-            // For demo, we parse URI if it's JSON or assume it's description
             let name = `Agent #${id}`;
             let description = tokenUri;
             let creatorName = 'Unknown';
@@ -93,29 +126,29 @@ export async function fetchAgents(): Promise<AgentData[]> {
             // Fetch Reputation Summary
             let reputation = { count: 0, score: 0 };
             try {
-                const [count, score] = await publicClient.readContract({
-                    address: REPUTATION_REGISTRY_ADDRESS,
+                const [count, score] = await client.readContract({
+                    address: addresses.reputationRegistry as `0x${string}`,
                     abi: [parseAbiItem('function getSummary(uint256 agentId, address[] clientAddresses, bytes32 tag1, bytes32 tag2) view returns (uint64 count, uint8 averageScore)')],
                     functionName: 'getSummary',
                     args: [BigInt(log.args.agentId), [], '0x0000000000000000000000000000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000000000000000000000000000']
-                });
+                }) as [bigint, number];
                 reputation = { count: Number(count), score: Number(score) };
             } catch (e) {
-                console.warn(`Failed to fetch reputation for agent ${id}`, e);
+                // console.warn(`Failed to fetch reputation for agent ${id}`, e);
             }
 
             // Fetch Validation Summary
             let validation = { count: 0, score: 0 };
             try {
-                const [count, score] = await publicClient.readContract({
-                    address: VALIDATION_REGISTRY_ADDRESS,
+                const [count, score] = await client.readContract({
+                    address: addresses.validationRegistry as `0x${string}`,
                     abi: [parseAbiItem('function getSummary(uint256 agentId, address[] validatorAddresses, bytes32 tag) view returns (uint64 count, uint8 avgResponse)')],
                     functionName: 'getSummary',
                     args: [BigInt(log.args.agentId), [], '0x0000000000000000000000000000000000000000000000000000000000000000']
-                });
+                }) as [bigint, number];
                 validation = { count: Number(count), score: Number(score) };
             } catch (e) {
-                console.warn(`Failed to fetch validation for agent ${id}`, e);
+                // console.warn(`Failed to fetch validation for agent ${id}`, e);
             }
 
             agents.push({
@@ -123,7 +156,7 @@ export async function fetchAgents(): Promise<AgentData[]> {
                 name,
                 creatorName,
                 description,
-                createdAt: new Date().toISOString(), // Block timestamp would be better but requires more calls
+                createdAt: new Date().toISOString(),
                 status: 'active',
                 address: owner,
                 reputation,
@@ -131,28 +164,31 @@ export async function fetchAgents(): Promise<AgentData[]> {
             });
         }
 
-        return agents.reverse(); // Newest first
+        return agents.reverse();
     } catch (error) {
         console.error("Error fetching Cronos agents:", error);
         return [];
     }
 }
 
-export async function fetchTransactions() {
+export async function fetchTransactions(chainId: number = 338) {
     try {
+        const client = getPublicClient(chainId);
+        const addresses = getContractAddresses(chainId);
+
         const [identityLogs, reputationLogs, validationLogs] = await Promise.all([
-            publicClient.getLogs({
-                address: IDENTITY_REGISTRY_ADDRESS,
+            client.getLogs({
+                address: addresses.identityRegistry as `0x${string}`,
                 fromBlock: 'earliest',
                 toBlock: 'latest'
             }),
-            publicClient.getLogs({
-                address: REPUTATION_REGISTRY_ADDRESS,
+            client.getLogs({
+                address: addresses.reputationRegistry as `0x${string}`,
                 fromBlock: 'earliest',
                 toBlock: 'latest'
             }),
-            publicClient.getLogs({
-                address: VALIDATION_REGISTRY_ADDRESS,
+            client.getLogs({
+                address: addresses.validationRegistry as `0x${string}`,
                 fromBlock: 'earliest',
                 toBlock: 'latest'
             })
@@ -177,8 +213,8 @@ export async function fetchTransactions() {
     }
 }
 
-export async function fetchAgentDetails(id: string) {
+export async function fetchAgentDetails(id: string, chainId: number = 338) {
     // Re-use fetch logic or optimize
-    const agents = await fetchAgents();
+    const agents = await fetchAgents(chainId);
     return agents.find(a => a.id === id) || null;
 }

@@ -34,22 +34,21 @@ export default function AgentDetailPage({ params }: { params: Promise<{ id: stri
 
   useEffect(() => {
     const fetchAgent = async () => {
+      setLoading(true)
+      setError(null)
       try {
-        const res = await fetch(`/api/agents/${id}`)
+        const res = await fetch(`/api/agents/${id}?network=${network}`)
+        if (!res.ok) {
+          throw new Error('Agent not found or API error')
+        }
         const data = await res.json()
+
         if (data.details) {
           setAgent(data.details)
+        } else if (data.id && data.status) {
+          setAgent(data)
         } else {
-          // Fallback if the API structure matches list response or single item
-          // The route /api/agents/[id] returns { details, tasks } currently in old code
-          // But I updated /api/agents/[id] logic? NO. I only updated /api/agents (list).
-          // I need to update /api/agents/[id]/route.ts as well!
-          // Wait, I missed updating /api/agents/[id]/route.ts
-          // I should update it to use fetchAgentDetails from cronos.ts
-          // Logic below assumes the API returns { details: AgentData, tasks: ... }
-          // Let's assume I fix the API in parallel or next step.
-          // For now, I'll code this to expect the new structure.
-          setAgent(data.details || data) // Robustness
+          throw new Error('Invalid agent data received')
         }
       } catch (e) {
         console.error(e)
@@ -59,7 +58,7 @@ export default function AgentDetailPage({ params }: { params: Promise<{ id: stri
       }
     }
     fetchAgent()
-  }, [id])
+  }, [id, network])
 
   if (loading) {
     return (

@@ -1,0 +1,12 @@
+{
+  "cronosTestnet": {
+    "identityRegistry": "0xB159E0c8093081712c92e274DbFEa5A97A80cA30",
+    "reputationRegistry": "0x38E9cDB0eBc128bEA55c36C03D5532697669132d",
+    "validationRegistry": "0x386fd4Fa2F27E528CF2D11C6d4b0A4dceD283E0E"
+  },
+  "ganache": {
+    "identityRegistry": "0xb89178765AC871d4Eea4133b1865971B75076675",
+    "reputationRegistry": "0x7B9A91313bB68da225835ACd0963Eeb7dCE5400a",
+    "validationRegistry": "0xF26796c5792D12CD02608c3f3FD6624069795daa"
+  }
+}

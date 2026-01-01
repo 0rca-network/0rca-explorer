@@ -9,9 +9,16 @@ export async function GET(
 ) {
     try {
         const params = await context.params
-        const { id } = params // Use string ID directly
+        const { id } = params
 
-        const details = await fetchAgentDetails(id)
+        const searchParams = request.nextUrl.searchParams;
+        const network = searchParams.get('network');
+        let chainId = 338;
+        if (network === 'ganache' || network === 'localnet' || network === '1337') {
+            chainId = 1337;
+        }
+
+        const details = await fetchAgentDetails(id, chainId)
 
         if (!details) {
             return NextResponse.json({ error: 'Agent not found' }, { status: 404 })

@@ -6,7 +6,7 @@ const config: HardhatUserConfig = {
   solidity: {
     version: "0.8.24",
     settings: {
-      evmVersion: "shanghai",
+      evmVersion: "paris",
       optimizer: {
         enabled: true,
         runs: 200,
@@ -24,6 +24,18 @@ const config: HardhatUserConfig = {
       },
       gasPrice: 1600000000000,
     },
+    ganache: {
+      type: "http",
+      url: "http://127.0.0.1:7545",
+      chainId: 1337,
+      accounts: {
+        mnemonic: "dish public milk ramp capable venue poverty grain useless december hedgehog shuffle",
+      },
+    },
+    localhost: {
+      type: "http",
+      url: "http://127.0.0.1:7545",
+    }
   },
 };
 
