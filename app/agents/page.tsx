@@ -6,13 +6,13 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { LayoutGrid, List, Filter, Star, CheckCircle2, ShieldCheck, User, Activity } from "lucide-react"
 import Link from "next/link"
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useNetwork } from "@/contexts/network-context"
 
 const ITEMS_PER_PAGE = 10
 
-export default function AgentsPage() {
+function AgentsContent() {
   const router = useRouter()
   const [view, setView] = useState<"list" | "tiles">("list")
   const [activeTab, setActiveTab] = useState("Overview")
@@ -149,8 +149,8 @@ export default function AgentsPage() {
               variant="outline"
               size="sm"
               className={`h-10 px-6 rounded-xl border-white/5 text-xs font-bold transition-all ${!isVerifiedOnly && !isTopRatedOnly
-                  ? 'bg-blue-500/10 text-blue-400 border-blue-500/40'
-                  : 'bg-zinc-900/50 text-zinc-400 hover:bg-zinc-800'
+                ? 'bg-blue-500/10 text-blue-400 border-blue-500/40'
+                : 'bg-zinc-900/50 text-zinc-400 hover:bg-zinc-800'
                 }`}
               onClick={() => {
                 const params = new URLSearchParams(searchParams.toString())
@@ -317,3 +317,12 @@ export default function AgentsPage() {
     </main>
   )
 }
+
+export default function AgentsPage() {
+  return (
+    <Suspense fallback={<div className="container mx-auto px-6 py-40 text-center text-zinc-500">Loading agents...</div>}>
+      <AgentsContent />
+    </Suspense>
+  )
+}
+

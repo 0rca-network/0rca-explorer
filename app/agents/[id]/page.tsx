@@ -10,9 +10,11 @@ import {
   Clock, Hash, Terminal, Box, ChevronRight
 } from "lucide-react"
 import Link from "next/link"
-import { useEffect, useState, use } from "react"
+import { useEffect, useState, use, Suspense } from "react"
 import { useNetwork } from "@/contexts/network-context"
 import { AgentData } from "@/lib/cronos"
+
+const ITEMS_PER_PAGE = 10
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
@@ -30,8 +32,7 @@ function CopyButton({ text }: { text: string }) {
   )
 }
 
-export default function AgentDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
+function AgentDetailContent({ id }: { id: string }) {
   const { network } = useNetwork()
   const [agent, setAgent] = useState<AgentData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -475,5 +476,23 @@ export default function AgentDetailPage({ params }: { params: Promise<{ id: stri
         </div>
       </div>
     </main>
+  )
+}
+
+export default function AgentDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
+
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-black text-white">
+        <SearchBar />
+        <div className="container mx-auto px-6 py-32 flex flex-col items-center">
+          <div className="h-16 w-16 mb-6 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+          <p className="text-zinc-500 font-black tracking-[0.3em] text-[9px] uppercase">Loading agent details...</p>
+        </div>
+      </main>
+    }>
+      <AgentDetailContent id={id} />
+    </Suspense>
   )
 }

@@ -27,14 +27,14 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        <NetworkProvider>
-          <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<div>Loading...</div>}>
+          <NetworkProvider>
             <Header />
             <NetworkInfo />
             {children}
             <Footer />
-          </Suspense>
-        </NetworkProvider>
+          </NetworkProvider>
+        </Suspense>
         <Analytics />
       </body>
     </html>

@@ -4,15 +4,13 @@ import { SearchBar } from "@/components/search-bar"
 import { Pagination } from "@/components/pagination"
 import { Button } from "@/components/ui/button"
 import { Copy, ExternalLink, LayoutGrid, List } from "lucide-react"
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { useNetwork } from "@/contexts/network-context"
 
-
-
 const ITEMS_PER_PAGE = 18
 
-export default function TransactionsPage() {
+function TransactionsContent() {
   const [view, setView] = useState<"list" | "tiles">("list")
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [allTransactions, setAllTransactions] = useState<any[]>([])
@@ -232,3 +230,12 @@ export default function TransactionsPage() {
     </main>
   )
 }
+
+export default function TransactionsPage() {
+  return (
+    <Suspense fallback={<div className="container mx-auto px-6 py-16 text-center text-zinc-500">Loading transactions...</div>}>
+      <TransactionsContent />
+    </Suspense>
+  )
+}
+

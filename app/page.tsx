@@ -4,9 +4,9 @@ import { SearchBar } from "@/components/search-bar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Activity, Users, TrendingUp, Zap } from "lucide-react"
 import { useNetwork } from "@/contexts/network-context"
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 
-export default function DashboardPage() {
+function DashboardContent() {
   const { network } = useNetwork()
   const [agentsCount, setAgentsCount] = useState(0)
   const [transactionsCount, setTransactionsCount] = useState(0)
@@ -147,5 +147,13 @@ export default function DashboardPage() {
         </Card>
       </div>
     </main>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="container mx-auto px-6 py-16 text-center text-zinc-500">Loading dashboard...</div>}>
+      <DashboardContent />
+    </Suspense>
   )
 }
