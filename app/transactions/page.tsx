@@ -137,12 +137,12 @@ function TransactionsContent() {
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <a
-                      href={`https://lora.algokit.io/testnet/transaction/${tx.id}`}
+                      href={`https://explorer.cronos.org/testnet/tx/${tx.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-mono text-sm text-blue-400 hover:text-blue-300 truncate"
                     >
-                      {tx.id}
+                      {tx.id.slice(0, 16)}...
                     </a>
                     <button
                       onClick={() => copyToClipboard(tx.id)}
@@ -156,11 +156,11 @@ function TransactionsContent() {
                       )}
                     </button>
                     <a
-                      href={`https://lora.algokit.io/testnet/transaction/${tx.id}`}
+                      href={`https://explorer.cronos.org/testnet/tx/${tx.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                      title="View on AlgoExplorer"
+                      title="View on Cronos Explorer"
                     >
                       <ExternalLink className="h-4 w-4 text-zinc-500 hover:text-white" />
                     </a>
@@ -186,7 +186,7 @@ function TransactionsContent() {
                   <div className="text-xs text-zinc-500 mb-2">Transaction ID</div>
                   <div className="flex items-center gap-2">
                     <a
-                      href={`https://lora.algokit.io/testnet/transaction/${tx.id}`}
+                      href={`https://explorer.cronos.org/testnet/tx/${tx.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-mono text-sm text-blue-400 hover:text-blue-300 truncate"
