@@ -10,6 +10,7 @@ function DashboardContent() {
   const { network } = useNetwork()
   const [agentsCount, setAgentsCount] = useState(0)
   const [transactionsCount, setTransactionsCount] = useState(0)
+  const [blockHeight, setBlockHeight] = useState<string>("0")
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -25,6 +26,9 @@ function DashboardContent() {
 
         setAgentsCount(agentsData.count || agentsData.agents?.length || 0)
         setTransactionsCount(transactionsData.transactions?.length || 0)
+        if (transactionsData.blockHeight) {
+          setBlockHeight(transactionsData.blockHeight)
+        }
       } catch (error) {
         console.error('Failed to fetch data:', error)
       } finally {
@@ -39,32 +43,19 @@ function DashboardContent() {
     {
       title: "Active Agents",
       value: loading ? "..." : agentsCount.toString(),
-      change: "+12.5%",
+      change: "Live",
       icon: Users,
       trend: "up",
     },
     {
-      title: "Total Transactions",
+      title: "Recent Transactions",
       value: loading ? "..." : transactionsCount.toString(),
-      change: "+8.2%",
+      change: "24h",
       icon: Activity,
       trend: "up",
     },
-    {
-      title: "TCRO Volume",
-      value: "2.4M",
-      change: "+15.3%",
-      icon: TrendingUp,
-      trend: "up",
-    },
-    {
-      title: "Avg Response Time",
-      value: "1.2s",
-      change: "-5.1%",
-      icon: Zap,
-      trend: "down",
-    },
   ]
+
   return (
     <main className="min-h-screen">
       <SearchBar />
@@ -87,9 +78,7 @@ function DashboardContent() {
                     <div className="h-12 w-12 rounded-xl bg-white/5 flex items-center justify-center">
                       <Icon className="h-6 w-6 text-white" />
                     </div>
-                    <span
-                      className={`text-sm font-medium ${stat.trend === "up" ? "text-emerald-400" : "text-blue-400"}`}
-                    >
+                    <span className="text-sm font-medium text-emerald-400">
                       {stat.change}
                     </span>
                   </div>
@@ -103,44 +92,52 @@ function DashboardContent() {
 
         <Card className="bg-zinc-900/50 border-white/10">
           <CardHeader>
-            <CardTitle className="text-xl">Network Status</CardTitle>
+            <CardTitle className="text-xl">Protocol Health</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-zinc-400">Block Height</span>
-                <span className="font-mono text-white">34,567,890</span>
+                <span className="text-sm text-zinc-400">Identity Registry</span>
+                <span className="font-mono text-emerald-400">Operational</span>
               </div>
               <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full w-full bg-gradient-to-r from-emerald-500 to-blue-500 animate-pulse" />
+                <div className="h-full w-full bg-emerald-500" />
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-zinc-400">TPS</span>
-                <span className="font-mono text-white">1,247</span>
+                <span className="text-sm text-zinc-400">Reputation Registry</span>
+                <span className="font-mono text-emerald-400">Operational</span>
               </div>
               <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full w-3/4 bg-gradient-to-r from-blue-500 to-purple-500" />
+                <div className="h-full w-full bg-emerald-500" />
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-zinc-400">Agent Uptime</span>
-                <span className="font-mono text-emerald-400">99.8%</span>
+                <span className="text-sm text-zinc-400">Validation Registry</span>
+                <span className="font-mono text-emerald-400">Operational</span>
               </div>
               <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full w-[99.8%] bg-gradient-to-r from-emerald-500 to-teal-500" />
+                <div className="h-full w-full bg-emerald-500" />
               </div>
             </div>
 
             <div className="pt-4 border-t border-white/5">
-              <div className="text-sm text-zinc-400 mb-2">Network Health</div>
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-white font-medium">Operational</span>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm text-zinc-400 mb-1">Network Status</div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-white font-medium">Connected</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm text-zinc-400 mb-1">Current Block</div>
+                  <div className="font-mono text-white">{blockHeight}</div>
+                </div>
               </div>
             </div>
           </CardContent>

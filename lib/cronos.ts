@@ -1,4 +1,4 @@
-import { createPublicClient, http, defineChain, parseAbiItem, fromHex } from 'viem';
+import { createPublicClient, http, defineChain, parseAbiItem, fromHex, Chain, Log } from 'viem';
 import contracts from './contracts.json';
 
 // Chain Definitions
@@ -36,7 +36,7 @@ const clients: Record<number, any> = {};
 
 export function getPublicClient(chainId: number = 338) {
     if (clients[chainId]) return clients[chainId];
-    let chain = cronosTestnetChain;
+    let chain: Chain = cronosTestnetChain;
     if (chainId === 1337 || chainId === 5777) chain = ganacheChain;
     const client = createPublicClient({ chain, transport: http() });
     clients[chainId] = client;
@@ -135,19 +135,90 @@ export async function fetchAgents(chainId: number = 338): Promise<AgentData[]> {
 export async function fetchTransactions(chainId: number = 338) {
     try {
         const client = getPublicClient(chainId);
-        // Direct approach: Only get very recent logs to avoid slow scanning
+        const addresses = getContractAddresses(chainId);
+        const targetAddresses = [
+            addresses.identityRegistry,
+            addresses.reputationRegistry,
+            addresses.validationRegistry
+        ].filter(addr => addr && addr !== '0x0000000000000000000000000000000000000000').map(a => a.toLowerCase());
+
         const currentBlock = await client.getBlockNumber();
-        const fromBlock = currentBlock - BigInt(100);
+        const transactions: any[] = [];
+        const seenHashes = new Set<string>();
 
-        const logs = await client.getLogs({ fromBlock, toBlock: 'latest' });
+        // Phase 1: Scan last 50 blocks directly for transactions (very fast, covers calls)
+        const recentBlocksToScan = 50;
+        const blockPromises = [];
+        for (let i = 0; i < recentBlocksToScan; i++) {
+            blockPromises.push(client.getBlock({
+                blockNumber: currentBlock - BigInt(i),
+                includeTransactions: true
+            }));
+        }
 
-        return logs.slice(0, 10).map((l: any) => ({
-            id: l.transactionHash,
-            sender: '0x...',
-            round: Number(l.blockNumber),
-            timestamp: Date.now()
-        }));
+        const blocks = await Promise.all(blockPromises);
+        for (const block of blocks) {
+            if (!block || !block.transactions) continue;
+            for (const tx of block.transactions as any[]) {
+                if (tx.to && targetAddresses.includes(tx.to.toLowerCase())) {
+                    if (!seenHashes.has(tx.hash)) {
+                        let type = "Direct Call";
+                        if (tx.to.toLowerCase() === addresses.identityRegistry.toLowerCase()) type = "Identity Registry";
+                        else if (tx.to.toLowerCase() === addresses.reputationRegistry.toLowerCase()) type = "Reputation Registry";
+                        else if (tx.to.toLowerCase() === addresses.validationRegistry.toLowerCase()) type = "Validation Registry";
+
+                        transactions.push({
+                            id: tx.hash,
+                            sender: tx.from,
+                            type: type,
+                            round: Number(block.number),
+                            timestamp: Number(block.timestamp)
+                        });
+                        seenHashes.add(tx.hash);
+                    }
+                }
+            }
+        }
+
+        // Phase 2: Use getLogs for older activity (in one larger chunk if possible)
+        // We'll try the last 5000 blocks which is standard for most RPCs
+        try {
+            const logs = await client.getLogs({
+                address: targetAddresses as `0x${string}`[],
+                fromBlock: currentBlock - BigInt(5000),
+                toBlock: currentBlock
+            });
+
+            for (const log of logs) {
+                if (!seenHashes.has(log.transactionHash)) {
+                    // Fetch details for logs not found in Phase 1
+                    const [block, tx] = await Promise.all([
+                        client.getBlock({ blockNumber: log.blockNumber }),
+                        client.getTransaction({ hash: log.transactionHash })
+                    ]);
+
+                    let type = "Registry Event";
+                    if (log.address.toLowerCase() === addresses.identityRegistry.toLowerCase()) type = "Identity Registry";
+                    else if (log.address.toLowerCase() === addresses.reputationRegistry.toLowerCase()) type = "Reputation Registry";
+                    else if (log.address.toLowerCase() === addresses.validationRegistry.toLowerCase()) type = "Validation Registry";
+
+                    transactions.push({
+                        id: log.transactionHash,
+                        sender: tx.from,
+                        type: type,
+                        round: Number(log.blockNumber),
+                        timestamp: Number(block.timestamp)
+                    });
+                    seenHashes.add(log.transactionHash);
+                }
+            }
+        } catch (e) {
+            console.error("Historical log fetch error (skipping):", e);
+        }
+
+        return transactions.sort((a, b) => b.timestamp - a.timestamp).slice(0, 20);
     } catch (error) {
+        console.error("Error fetching transactions:", error);
         return [];
     }
 }

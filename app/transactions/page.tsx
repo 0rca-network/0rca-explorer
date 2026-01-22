@@ -28,7 +28,7 @@ function TransactionsContent() {
         const transactions = data.transactions || []
         const formattedTransactions = transactions.map((tx: any) => ({
           id: tx.id,
-          type: "Application Call", // Default or infer from tx
+          type: tx.type || "Application Call",
           date: new Date(tx.timestamp * 1000).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
