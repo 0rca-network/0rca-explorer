@@ -38,6 +38,9 @@ export async function GET(request: NextRequest) {
       filteredAgents = filteredAgents.filter(a => a.validation.count > 0);
     }
 
+    // Sort by ID descending (newest first)
+    filteredAgents.sort((a, b) => parseInt(b.id) - parseInt(a.id));
+
     return NextResponse.json({
       count: filteredAgents.length,
       agents: filteredAgents

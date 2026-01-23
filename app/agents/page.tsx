@@ -60,7 +60,8 @@ function AgentsContent() {
             day: 'numeric'
           })
         }))
-        setAllAgents(formattedAgents)
+        const sortedAgents = formattedAgents.sort((a: any, b: any) => parseInt(b.id) - parseInt(a.id))
+        setAllAgents(sortedAgents)
       } catch (error) {
         console.error('Failed to fetch agents:', error)
       } finally {
