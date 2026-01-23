@@ -26,12 +26,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
+      <body className={`min-h-screen flex flex-col font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <Suspense fallback={<div>Loading...</div>}>
           <NetworkProvider>
             <Header />
             <NetworkInfo />
-            {children}
+            <main className="flex-1">
+              {children}
+            </main>
             <Footer />
           </NetworkProvider>
         </Suspense>
