@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { fetchAgents } from '@/lib/cronos'
+import { fetchAgents } from '@/lib/avalanche'
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const network = searchParams.get('network');
-    let chainId = 338;
-    if (network === 'ganache' || network === 'localnet' || network === '1337') {
-      chainId = 1337;
-    }
-
+    const chainId = 43112; // Avalanche Subnet
     let filteredAgents = await fetchAgents(chainId);
 
     // Filter by Owner

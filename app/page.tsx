@@ -1,8 +1,9 @@
 "use client"
 
 import { SearchBar } from "@/components/search-bar"
+import { RecentBounties } from "@/components/recent-bounties"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Activity, Users, TrendingUp, Zap } from "lucide-react"
+import { Activity, Users, TrendingUp, Zap, Globe } from "lucide-react"
 import { useNetwork } from "@/contexts/network-context"
 import { Suspense, useEffect, useState } from "react"
 
@@ -62,10 +63,13 @@ function DashboardContent() {
 
       <div className="container mx-auto px-6 pb-16">
         <div className="mb-12">
-          <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
-            Dashboard
+          <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent italic">
+            0rca Interoperability Layer
           </h1>
-          <p className="text-zinc-400 text-lg">Monitor your AI agents on Cronos blockchain</p>
+          <p className="text-zinc-400 text-lg flex items-center gap-2">
+            <Globe className="h-4 w-4 text-blue-400" />
+            Cross-platform agent settlement on Avalanche L1
+          </p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-12">
@@ -90,58 +94,66 @@ function DashboardContent() {
           })}
         </div>
 
-        <Card className="bg-zinc-900/50 border-white/10">
-          <CardHeader>
-            <CardTitle className="text-xl">Protocol Health</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-zinc-400">Identity Registry</span>
-                <span className="font-mono text-emerald-400">Operational</span>
-              </div>
-              <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full w-full bg-emerald-500" />
-              </div>
-            </div>
+        <div className="grid gap-8 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <RecentBounties />
+          </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-zinc-400">Reputation Registry</span>
-                <span className="font-mono text-emerald-400">Operational</span>
-              </div>
-              <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full w-full bg-emerald-500" />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-zinc-400">Validation Registry</span>
-                <span className="font-mono text-emerald-400">Operational</span>
-              </div>
-              <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full w-full bg-emerald-500" />
-              </div>
-            </div>
-
-            <div className="pt-4 border-t border-white/5">
-              <div className="flex items-center justify-between">
+          <div className="lg:col-span-1">
+            <Card className="bg-zinc-900/50 border-white/10 mt-8 h-fit">
+              <CardHeader>
+                <CardTitle className="text-xl">Network L1 Health</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 <div>
-                  <div className="text-sm text-zinc-400 mb-1">Network Status</div>
-                  <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-white font-medium">Connected</span>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-zinc-400">Identity Registry</span>
+                    <span className="font-mono text-emerald-400">Operational</span>
+                  </div>
+                  <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-full w-full bg-emerald-500" />
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-sm text-zinc-400 mb-1">Current Block</div>
-                  <div className="font-mono text-white">{blockHeight}</div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-zinc-400">Reputation Registry</span>
+                    <span className="font-mono text-emerald-400">Operational</span>
+                  </div>
+                  <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-full w-full bg-emerald-500" />
+                  </div>
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-zinc-400">Validation Registry</span>
+                    <span className="font-mono text-emerald-400">Operational</span>
+                  </div>
+                  <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-full w-full bg-emerald-500" />
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-white/5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm text-zinc-400 mb-1">Network Status</div>
+                      <div className="flex items-center gap-2">
+                        <div className="h-3 w-3 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="text-white font-medium">Connected</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-zinc-400 mb-1">Current Block</div>
+                      <div className="font-mono text-white">{blockHeight}</div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </main>
   )
